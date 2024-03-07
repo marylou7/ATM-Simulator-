@@ -1,0 +1,10 @@
+C:\Users\DELL\source\repos\ATM-Simulator-\bin\Debug\ATM Simulator.exe.config
+C:\Users\DELL\source\repos\ATM-Simulator-\bin\Debug\ATM Simulator.exe
+C:\Users\DELL\source\repos\ATM-Simulator-\bin\Debug\ATM Simulator.pdb
+C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM Simulator.csproj.AssemblyReference.cache
+C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM_Simulator.ATM.resources
+C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM_Simulator.Properties.Resources.resources
+C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM Simulator.csproj.GenerateResource.cache
+C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM Simulator.csproj.CoreCompileInputs.cache
+C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM Simulator.exe
+C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM Simulator.pdb
