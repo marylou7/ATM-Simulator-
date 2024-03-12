@@ -137,9 +137,26 @@ namespace ATM_Simulator
                 return;
             }
 
-            lblText.Text = "Please enter PIN:"; // change the text of lblAccountNo to "Please enter PIN"
-            txtBoxPin.Visible = true;
-            txtBoxAccountNo.Visible = false; // hide the account number TextBox
+            // check that this is account exists
+            int accountNumber = int.Parse(txtBoxAccountNo.Text); // get the entered account number from the TextBox
+            bool accountFound = false;
+            foreach (Account acc in ac)
+            {
+                if (acc.getAccountNum() == accountNumber)
+                {
+                    accountFound = true;
+                    lblText.Text = "Please enter PIN:"; // change the text of lblAccountNo to "Please enter PIN"
+                    txtBoxPin.Visible = true;
+                    txtBoxAccountNo.Visible = false; // hide the account number TextBox
+                }
+            }
+
+            if (accountFound == false)
+            {
+                // entered account number is not found
+                MessageBox.Show("An account with this number doesn't exist. ");
+                txtBoxAccountNo.Clear();
+            }
         }
 
         private void validatePIN()
