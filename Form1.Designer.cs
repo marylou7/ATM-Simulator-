@@ -453,9 +453,9 @@
             this.Controls.Add(this.txtBoxPin);
             this.Controls.Add(this.lblText);
             this.Controls.Add(this.txtBoxAccountNo);
-            this.Controls.Add(this.panel1);
             this.Controls.Add(this.btnWithdraw);
             this.Controls.Add(this.btnReturnCard);
+            this.Controls.Add(this.panel1);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ATM";

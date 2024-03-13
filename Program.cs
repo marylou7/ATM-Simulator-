@@ -16,7 +16,7 @@ namespace ATM_Simulator
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new ATM());
+            Application.Run(new StartForm());
         }
     }
 }
