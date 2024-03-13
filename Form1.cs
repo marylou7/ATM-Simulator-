@@ -13,6 +13,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -25,13 +26,14 @@ namespace ATM_Simulator
         private Account[] ac; //local referance to the array of accounts
         private Account activeAccount; //this is a referance to the account that is being used
 
-
         public ATM()
         {
             InitializeComponent();
+
             // set the TextBox to be read-only to disable keyboard input for both account and pin
             txtBoxAccountNo.ReadOnly = true;
             txtBoxPin.ReadOnly = true;
+
 
 
             // create instances of Account for each account and store them in the accounts array
@@ -41,11 +43,14 @@ namespace ATM_Simulator
             new Account(750, 2222, 222222),
             new Account(3000, 3333, 333333)
             };
+
+
+
         }
 
         private void ATM_Load(object sender, EventArgs e)
         {
-
+       
         }
 
         private void txtBoxAccountNo_TextChanged(object sender, EventArgs e)
@@ -304,6 +309,7 @@ namespace ATM_Simulator
             }
         }
     }
+
 
     /**
     * The Account class encapusulates all features of a simple bank account

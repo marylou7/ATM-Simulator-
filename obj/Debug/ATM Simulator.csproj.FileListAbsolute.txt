@@ -8,3 +8,4 @@ C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM Simulator.csproj.Generat
 C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM Simulator.csproj.CoreCompileInputs.cache
 C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM Simulator.exe
 C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM Simulator.pdb
+C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM_Simulator.StartForm.resources
