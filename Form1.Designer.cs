@@ -59,6 +59,7 @@
             this.lblWithdraw = new System.Windows.Forms.Label();
             this.btnCheckBalance = new System.Windows.Forms.Button();
             this.btnReturnCard = new System.Windows.Forms.Button();
+            this.btnDepositCash = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -414,7 +415,7 @@
             // btnCheckBalance
             // 
             this.btnCheckBalance.Font = new System.Drawing.Font("Tahoma", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnCheckBalance.Location = new System.Drawing.Point(63, 228);
+            this.btnCheckBalance.Location = new System.Drawing.Point(63, 295);
             this.btnCheckBalance.Name = "btnCheckBalance";
             this.btnCheckBalance.Size = new System.Drawing.Size(309, 61);
             this.btnCheckBalance.TabIndex = 20;
@@ -426,7 +427,7 @@
             // btnReturnCard
             // 
             this.btnReturnCard.Font = new System.Drawing.Font("Tahoma", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnReturnCard.Location = new System.Drawing.Point(63, 293);
+            this.btnReturnCard.Location = new System.Drawing.Point(63, 362);
             this.btnReturnCard.Name = "btnReturnCard";
             this.btnReturnCard.Size = new System.Drawing.Size(309, 61);
             this.btnReturnCard.TabIndex = 21;
@@ -434,6 +435,18 @@
             this.btnReturnCard.UseVisualStyleBackColor = true;
             this.btnReturnCard.Visible = false;
             this.btnReturnCard.Click += new System.EventHandler(this.btnReturnCard_Click);
+            // 
+            // btnDepositCash
+            // 
+            this.btnDepositCash.Font = new System.Drawing.Font("Tahoma", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnDepositCash.Location = new System.Drawing.Point(63, 228);
+            this.btnDepositCash.Name = "btnDepositCash";
+            this.btnDepositCash.Size = new System.Drawing.Size(309, 61);
+            this.btnDepositCash.TabIndex = 29;
+            this.btnDepositCash.Text = "Deposit Cash";
+            this.btnDepositCash.UseVisualStyleBackColor = true;
+            this.btnDepositCash.Visible = false;
+            this.btnDepositCash.Click += new System.EventHandler(this.btnDepositCash_Click);
             // 
             // ATM
             // 
@@ -443,19 +456,20 @@
             this.ClientSize = new System.Drawing.Size(940, 574);
             this.Controls.Add(this.lblWithdraw);
             this.Controls.Add(this.btnOther);
-            this.Controls.Add(this.btn10);
-            this.Controls.Add(this.btn500);
-            this.Controls.Add(this.btn40);
-            this.Controls.Add(this.btn100);
-            this.Controls.Add(this.btn20);
-            this.Controls.Add(this.btnCheckBalance);
             this.Controls.Add(this.lblWelcome);
-            this.Controls.Add(this.txtBoxPin);
             this.Controls.Add(this.lblText);
-            this.Controls.Add(this.txtBoxAccountNo);
-            this.Controls.Add(this.btnWithdraw);
             this.Controls.Add(this.btnReturnCard);
             this.Controls.Add(this.panel1);
+            this.Controls.Add(this.btn20);
+            this.Controls.Add(this.btn10);
+            this.Controls.Add(this.btn500);
+            this.Controls.Add(this.btnDepositCash);
+            this.Controls.Add(this.btnCheckBalance);
+            this.Controls.Add(this.txtBoxPin);
+            this.Controls.Add(this.btnWithdraw);
+            this.Controls.Add(this.txtBoxAccountNo);
+            this.Controls.Add(this.btn40);
+            this.Controls.Add(this.btn100);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ATM";
@@ -500,6 +514,7 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnCheckBalance;
         private System.Windows.Forms.Button btnReturnCard;
+        private System.Windows.Forms.Button btnDepositCash;
     }
 }
 
