@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(StartForm));
             this.btnDataRace = new System.Windows.Forms.Button();
             this.btnNoDataRace = new System.Windows.Forms.Button();
             this.SuspendLayout();
@@ -64,6 +65,7 @@
             this.ClientSize = new System.Drawing.Size(940, 574);
             this.Controls.Add(this.btnNoDataRace);
             this.Controls.Add(this.btnDataRace);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "StartForm";
             this.Text = "ATM Simulator";
             this.Load += new System.EventHandler(this.StartForm_Load);
