@@ -50,7 +50,7 @@ namespace ATM_Simulator
 
         private void ATM_Load(object sender, EventArgs e)
         {
-       
+         
         }
 
         private void txtBoxAccountNo_TextChanged(object sender, EventArgs e)
@@ -216,6 +216,7 @@ namespace ATM_Simulator
             txtBoxPin.Visible = false;
             lblWelcome.Visible = false;
             btnWithdraw.Visible = false;
+            btnDepositCash.Visible = false;
             btnCheckBalance.Visible = false;
             btnReturnCard.Visible = false;
             lblText.Text = "Enter Account Number";
@@ -232,7 +233,7 @@ namespace ATM_Simulator
 
         private void displayWelcomePage(bool visible)
         {
-            setControlsVisibility(visible, lblWelcome, btnWithdraw, btnCheckBalance, btnReturnCard);
+            setControlsVisibility(visible, lblWelcome, btnWithdraw, btnCheckBalance, btnReturnCard, btnDepositCash);
         }
 
         private void displayWithdrawCash(bool visible)
@@ -246,6 +247,12 @@ namespace ATM_Simulator
             displayWelcomePage(false);
             displayWithdrawCash(true);
         }
+
+        private void btnDepositCash_Click(object sender, EventArgs e)
+        {
+            //need to add this functionality
+        }
+
         private void btnCheckBalance_Click(object sender, EventArgs e)
         {
             if (activeAccount != null)
@@ -308,6 +315,8 @@ namespace ATM_Simulator
                 }
             }
         }
+
+        
     }
 
 
