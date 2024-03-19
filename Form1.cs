@@ -22,35 +22,25 @@ namespace ATM_Simulator
 
     public partial class ATM : Form
     {
+        private Account activeAccount; //local referance to the array of accounts
+        private Account[] ac; //this is a referance to the account that is being used
+        private bool dataRace;
 
-        private Account[] ac; //local referance to the array of accounts
-        private Account activeAccount; //this is a referance to the account that is being used
-
-        public ATM()
+        public ATM(Account[] ac, bool dr)
         {
             InitializeComponent();
 
             // set the TextBox to be read-only to disable keyboard input for both account and pin
             txtBoxAccountNo.ReadOnly = true;
             txtBoxPin.ReadOnly = true;
-
-
-
-            // create instances of Account for each account and store them in the accounts array
-            ac = new Account[]
-            {
-            new Account(300, 1111, 111111),
-            new Account(750, 2222, 222222),
-            new Account(3000, 3333, 333333)
-            };
-
-
+            this.dataRace = dr; // true if data race, false if no data race
+            this.ac = ac;
 
         }
 
         private void ATM_Load(object sender, EventArgs e)
         {
-         
+
         }
 
         private void txtBoxAccountNo_TextChanged(object sender, EventArgs e)
@@ -64,7 +54,7 @@ namespace ATM_Simulator
 
         private void txtBoxPin_TextChanged(object sender, EventArgs e)
         {
-            TextBox pinTextBox = sender as TextBox; 
+            TextBox pinTextBox = sender as TextBox;
             if (pinTextBox.Text.Length > 4) //check if the pin is at the limit
             {
                 // if the length is greater than 4 digits, truncate the text to 4 digits
@@ -102,6 +92,7 @@ namespace ATM_Simulator
             {
                 displayWelcomePage(true);
                 displayWithdrawCash(false);
+                displayDepositCash(false);
             }
         }
 
@@ -111,7 +102,7 @@ namespace ATM_Simulator
             {
                 txtBoxAccountNo.Text = ""; // clear the text in the textbox
             }
-            else if(txtBoxPin.Visible == true)
+            else if (txtBoxPin.Visible == true)
             {
                 txtBoxPin.Text = ""; // clear the text in the pin textbox
             }
@@ -133,6 +124,7 @@ namespace ATM_Simulator
             }
         }
 
+
         private void validateAccountNumber()
         {
             if (txtBoxAccountNo.Text.Length < 6) // check if the account number is less than 6 digits
@@ -147,13 +139,12 @@ namespace ATM_Simulator
             bool accountFound = false;
             foreach (Account acc in ac)
             {
-                if (acc.getAccountNum() == accountNumber)
-                {
-                    accountFound = true;
-                    lblText.Text = "Please enter PIN:"; // change the text of lblAccountNo to "Please enter PIN"
-                    txtBoxPin.Visible = true;
-                    txtBoxAccountNo.Visible = false; // hide the account number TextBox
-                }
+                acc.resetAttempts();
+                accountFound = true;
+                lblText.Text = "Please enter PIN:"; // change the text of lblAccountNo to "Please enter PIN"
+                txtBoxPin.Visible = true;
+                txtBoxAccountNo.Visible = false; // hide the account number TextBox
+
             }
 
             if (accountFound == false)
@@ -165,18 +156,18 @@ namespace ATM_Simulator
         }
 
         private void validatePIN()
-        { 
+        {
             int pinEntered;
             if (!int.TryParse(txtBoxPin.Text, out pinEntered)) // Get the entered PIN from the TextBox
             {
                 MessageBox.Show("Please enter a 4-digit PIN.");
                 return;
             }
-            
+
             int accountNumber = int.Parse(txtBoxAccountNo.Text); // get the entered account number from the TextBox
 
             bool accountFound = false;
-            activeAccount = null; 
+            activeAccount = null;
 
             foreach (Account acc in ac)
             {
@@ -193,8 +184,23 @@ namespace ATM_Simulator
                     }
                     else
                     {
-                        MessageBox.Show("Incorrect Account Number or Pin. Please try again");
-                        restartLoginProcess();
+                        MessageBox.Show("Incorrect PIN. Please try again");
+                        if (acc.getAttempts() != 0)
+                        {
+                            // if this account still has attempts left
+                            txtBoxPin.Clear();
+                            int numAttempts = acc.getAttempts();
+                            int newAttempts;
+                            newAttempts = numAttempts - 1;
+                            acc.decreaseAttempts(newAttempts);
+                            return;
+                        }
+                        else
+                        {
+                            // too many wrong attempts made, don't let this user continue guessing the pin.
+                            MessageBox.Show("Too many wrong PIN attempts, please try again later");
+                            restartLoginProcess();
+                        }
                     }
                 }
             }
@@ -202,10 +208,12 @@ namespace ATM_Simulator
             // if the loop finishes without finding a matching account number then display an error message
             if (!accountFound)
             {
-                MessageBox.Show("Incorrect Account Number or Pin. Please try again.");
+                MessageBox.Show("Error");
                 restartLoginProcess();
             }
         }
+
+
 
         private void restartLoginProcess()
         {
@@ -241,6 +249,11 @@ namespace ATM_Simulator
             setControlsVisibility(visible, lblWithdraw, btn10, btn20, btn40, btn100, btn500, btnOther);
         }
 
+        private void displayDepositCash(bool visible)
+        {
+            setControlsVisibility(visible, lblDeposit, btnd10, btnd20, btnd40, btnd100, btnd500, btndOther);
+        }
+
 
         private void btnWithdraw_Click(object sender, EventArgs e)
         {
@@ -248,10 +261,52 @@ namespace ATM_Simulator
             displayWithdrawCash(true);
         }
 
-        private void btnDepositCash_Click(object sender, EventArgs e)
+        private void BtnDeposit_Click(object sender, EventArgs e)
         {
-            //need to add this functionality
+            displayWelcomePage(false);
+            displayDepositCash(true);
         }
+
+        private void DepositCash_Click(object sender, EventArgs e)
+        {
+            Button button = sender as Button;
+            if (button != null)
+            {
+
+                int amount = 0;
+                switch (button.Name)
+                {
+                    case "btnd10":
+                        amount = 10;
+                        break;
+                    case "btnd20":
+                        amount = 20;
+                        break;
+                    case "btnd40":
+                        amount = 40;
+                        break;
+                    case "btnd100":
+                        amount = 100;
+                        break;
+                    case "btnd500":
+                        amount = 500;
+                        break;
+                    case "btndOther":
+                        btnOther_Click(sender, e);
+                        break;
+                }
+                Console.WriteLine(amount.ToString());
+                if (amount > 0) // if amount is greater than 0, perform the deposit
+                {
+
+                    PerformDeposit(amount);
+
+                }
+            }
+        }
+
+
+
 
         private void btnCheckBalance_Click(object sender, EventArgs e)
         {
@@ -267,6 +322,127 @@ namespace ATM_Simulator
             MessageBox.Show("Goodbye!");
             restartLoginProcess();
         }
+
+        private void btnOther_Click(object sender, EventArgs e)
+        {
+            InputDialog inputDialog = new InputDialog("Enter the amount you would like to withdraw", "Withdraw Cash", "0");
+
+            if (inputDialog.ShowDialog() == DialogResult.OK)
+            {
+                int amount;
+                if (int.TryParse(inputDialog.InputValue, out amount)) // check if the input is a valid integer
+                {
+                    PerformWithdrawal(amount);
+                }
+                else
+                {
+               
+                    MessageBox.Show("Please enter a valid amount.");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Withdrawal canceled.");
+            }
+        }
+
+        /**
+         * function to deposit an amount into the active account
+         * @param amount
+         * 
+         * This function deposits the specified amount into the active account. 
+         * It first checks if the account is null
+         * If a data race is simulated, an artificial delay of 5 seconds 
+         * is used for processing time.
+         */
+        private void PerformDeposit(int amount)
+        {
+            if (activeAccount != null)
+            {
+                int currentBalance = activeAccount.getBalance();  // create a local variable to hold the current balance
+                Thread.Sleep(5000); // simulate processing time for data race scenario
+
+                if (dataRace) // simulate the data race
+                {
+                    currentBalance += amount; // add the amount to the local varibale after the artificial delay
+
+                    activeAccount.setBalance(currentBalance); // update the balance after the delay
+
+                    // Display a message indicating successful deposit
+                    MessageBox.Show($"Successfully deposited £{amount}. Your current balance is £{activeAccount.getBalance()}");
+                    displayWelcomePage(true); // Display the welcome page again
+                    displayDepositCash(false);
+                }
+                else
+                {
+                    lock (activeAccount)   // use lock for critical section ie balance update
+                    {
+                        currentBalance += amount; // add the amount to the local varibale after the artificial delay
+
+                        activeAccount.setBalance(currentBalance); // update the balance after the delay
+
+                        // display a message indicating successful deposit
+                        MessageBox.Show($"Successfully deposited £{amount}. Your current balance is £{activeAccount.getBalance()}");
+                        displayWelcomePage(true); // display the welcome page again
+                        displayDepositCash(false);
+                    }
+                }
+            }
+        }
+
+        /**
+         * function to withdraw an amount into the active account
+         * @param amount
+         * 
+         * This function withdroaw the specified amount into the active account. 
+         * It first checks if the account is null
+         * If a data race is simulated, an artificial delay of 5 seconds 
+         * is used for processing time.
+         */
+        private void PerformWithdrawal(int amount)
+        {
+            if (activeAccount != null)
+            {
+
+                int currentBalance = activeAccount.getBalance(); // create a local variable to hold the current balance
+                Thread.Sleep(5000); // simulate processing time for data race scenario
+
+                if (dataRace) // simulate the data race
+                {
+                    currentBalance -= amount; // add the amount to the local varibale after the artificial delay
+
+                    activeAccount.setBalance(currentBalance); // update the balance after the delay
+
+                    // display a message indicating successful withdrawal
+                    MessageBox.Show($"Successfully withdrew £{amount}. Your current balance is £{activeAccount.getBalance()}");
+                    displayWelcomePage(true); // display the welcome page again
+                    displayWithdrawCash(false);
+                }
+                else
+                {
+                    lock (activeAccount)  // use lock for critical section ie balance update
+                    {
+                        if (activeAccount.getBalance() >= amount) // check if there are sufficient funds
+                        {
+                            currentBalance -= amount; // add the amount to the local varibale after the artificial delay
+
+                            activeAccount.setBalance(currentBalance); // update the balance after the delay
+
+                            // Display a message indicating successful withdrawal
+                            MessageBox.Show($"Successfully withdrew £{amount}. Your current balance is £{activeAccount.getBalance()}");
+                            displayWelcomePage(true); // Display the welcome page again
+                            displayWithdrawCash(false);
+
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Insufficient funds. Your current balance is £{activeAccount.getBalance()}");
+                        }
+                    }
+                }
+            }
+        }
+
 
 
         private void withdrawCash_Click(object sender, EventArgs e)
@@ -293,30 +469,58 @@ namespace ATM_Simulator
                         amount = 500;
                         break;
                     case "btnOther":
-                        // need to add this funcitonality probably with another text box for input
+                        btnOther_Click(sender, e);
                         break;
                 }
 
                 if (amount > 0) // if amount is greater than 0, perform the withdrawal
                 {
-                    if (activeAccount.getBalance() >= amount) // check if there are sufficient funds
-                    {
-                        if (activeAccount.decrementBalance(amount))
-                        {
-                            MessageBox.Show($"Successfully withdrew £{amount}. Your current balance is £{activeAccount.getBalance()}");
-                            displayWelcomePage(true); // display the welcome page again
-                            displayWithdrawCash(false);
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Insufficient funds. Your current balance is £{activeAccount.getBalance()}");
-                    }
+                    PerformWithdrawal(amount);
                 }
             }
         }
 
-        
+
+    }
+
+    public class InputDialog : Form
+    {
+        private TextBox textBox;
+        private Button okButton;
+
+        public string InputValue => textBox.Text;
+
+        public InputDialog(string prompt, string title, string defaultInput)
+        {
+            InitializeComponents(prompt, title, defaultInput);
+        }
+
+        private void InitializeComponents(string prompt, string title, string defaultInput)
+        {
+            this.Text = title;
+            this.Width = 300;
+            this.Height = 150;
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+
+            Label label = new Label();
+            label.Text = prompt;
+            label.Dock = DockStyle.Top;
+
+            textBox = new TextBox();
+            textBox.Text = defaultInput;
+            textBox.Dock = DockStyle.Top;
+
+            okButton = new Button();
+            okButton.Text = "OK";
+            okButton.DialogResult = DialogResult.OK;
+            okButton.Dock = DockStyle.Bottom;
+
+            this.Controls.Add(label);
+            this.Controls.Add(textBox);
+            this.Controls.Add(okButton);
+        }
     }
 
 
@@ -330,13 +534,15 @@ namespace ATM_Simulator
         private int balance;
         private int pin;
         private int accountNum;
+        private int numAttempts; // number of pin attempts
 
         // a constructor that takes initial values for each of the attributes (balance, pin, accountNumber)
-        public Account(int balance, int pin, int accountNum)
+        public Account(int balance, int pin, int accountNum, int numAttempts)
         {
             this.balance = balance;
             this.pin = pin;
             this.accountNum = accountNum;
+            this.numAttempts = numAttempts;
         }
 
         //getter and setter functions for balance
@@ -352,6 +558,21 @@ namespace ATM_Simulator
         public int getAccountNum()
         {
             return accountNum;
+        }
+        // get number of attempts
+        public int getAttempts()
+        {
+            return numAttempts;
+        }
+        // reset numattempts 
+        public void resetAttempts()
+        {
+            numAttempts = 3;
+        }
+        // decrement attempts
+        public void decreaseAttempts(int newAttempts)
+        {
+            this.numAttempts = newAttempts;
         }
 
 

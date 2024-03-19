@@ -21,9 +21,17 @@ namespace ATM_Simulator
 {
     public partial class StartForm : Form
     {
+        private Account[] ac;
+        bool dr; // variable for data race
         public StartForm()
         {
             InitializeComponent();
+            ac = new Account[]
+            {
+            new Account(300, 1111, 111111, 3),
+            new Account(750, 2222, 222222, 3),
+            new Account(3000, 3333, 333333, 3)
+            };
         }
 
         private void StartForm_Load(object sender, EventArgs e)
@@ -33,32 +41,32 @@ namespace ATM_Simulator
 
         private void btnDataRace_Click(object sender, EventArgs e)
         {
-            StartATMThreads();
-
-
+            // choosing to demonstrate an incorrect account balanace after two or more simultaneous withdrawals are made from separate ATMs
+            dr = true;
+            StartATMThreads(dr);
         }
 
         private void btnNoDataRace_Click(object sender, EventArgs e)
         {
-            StartATMThreads();
+            // choosing to demonstrate a correct account balance after two (or more) simultaneous withdrawals are made from separate ATMs
+            dr = false;
+            StartATMThreads(dr);
         }
 
-
-
-        private void StartATMThreads()
+        private void StartATMThreads(bool dr)
         {
-            ATM atm1 = new ATM(); // instance of the first ATM form
+            ATM atm1 = new ATM(ac, dr); // instance of the first ATM form
             atm1.StartPosition = FormStartPosition.Manual;// set the location of the first instance
             atm1.Location = new System.Drawing.Point(0, 0); // set the position of the first for
-           
-            ATM atm2 = new ATM();  // instance of the second ATM form
+
+            ATM atm2 = new ATM(ac, dr);  // instance of the second ATM form
             atm2.StartPosition = FormStartPosition.Manual;  // set the location of the second instance
             atm2.Location = new System.Drawing.Point(atm1.Width, 0); // set the position of the second form
 
-            
+
             Thread atmThread1 = new Thread(() => ShowForm(atm1)); // start a new thread for the first ATM
             atmThread1.Start();
-        
+
             Thread atmThread2 = new Thread(() => ShowForm(atm2));     // start a new thread for the second ATM
             atmThread2.Start();
 

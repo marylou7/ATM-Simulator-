@@ -53,7 +53,7 @@
             this.btnNoDataRace.Name = "btnNoDataRace";
             this.btnNoDataRace.Size = new System.Drawing.Size(256, 181);
             this.btnNoDataRace.TabIndex = 1;
-            this.btnNoDataRace.Text = "No Data Race";
+            this.btnNoDataRace.Text = "Non- Data Race";
             this.btnNoDataRace.UseVisualStyleBackColor = false;
             this.btnNoDataRace.Click += new System.EventHandler(this.btnNoDataRace_Click);
             // 
