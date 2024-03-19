@@ -16,7 +16,7 @@ namespace ATM_Simulator
         {
             Loading();
             InitializeComponent();
-            
+
         }
 
         private async void Loading()
@@ -45,8 +45,8 @@ namespace ATM_Simulator
             this.Size = new Size(300, 150);
             this.ResumeLayout(false);
 
-            
-           
+
+
         }
 
         private void LoadingForm_Load(object sender, EventArgs e)

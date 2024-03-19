@@ -9,3 +9,4 @@ C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM Simulator.csproj.CoreCom
 C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM Simulator.exe
 C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM Simulator.pdb
 C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM_Simulator.StartForm.resources
+C:\Users\DELL\source\repos\ATM-Simulator-\obj\Debug\ATM_Simulator.LoadingForm.resources
