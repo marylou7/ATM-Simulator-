@@ -1,10 +1,10 @@
 ﻿/**
- * ATM Simulator Team 6
- * Team members:
- * - Marylou das Chagas e Silva 2501402
- * - Lirit Dampier 2560877 
- * - Troy Tsang 2506759
- */
+* ATM Simulator Team 6
+* Team members:
+* - Marylou das Chagas e Silva 2501402
+* - Lirit Dampier 2560877 
+* - Troy Tsang 2506759
+*/
 
 using System;
 using System.Collections.Generic;
@@ -25,6 +25,10 @@ namespace ATM_Simulator
         private Account activeAccount; //local referance to the array of accounts
         private Account[] ac; //this is a referance to the account that is being used
         private bool dataRace;
+        private SemaphoreSlim accountAccess = new SemaphoreSlim(1);
+        private SemaphoreSlim balanceAccess = new SemaphoreSlim(1);
+
+
 
         public ATM(Account[] ac, bool dr)
         {
@@ -125,91 +129,107 @@ namespace ATM_Simulator
         }
 
 
-        private void validateAccountNumber()
+        private async void validateAccountNumber()
         {
-            if (txtBoxAccountNo.Text.Length < 6) // check if the account number is less than 6 digits
+            await accountAccess.WaitAsync();
+            try
             {
-                MessageBox.Show("Please enter a valid 6-digit account number.");
-                txtBoxAccountNo.Text = "";
-                return;
+                if (txtBoxAccountNo.Text.Length < 6) // check if the account number is less than 6 digits
+                {
+                    MessageBox.Show("Please enter a valid 6-digit account number.");
+                    txtBoxAccountNo.Text = "";
+                    return;
+                }
+
+                // check that this is account exists
+                int accountNumber = int.Parse(txtBoxAccountNo.Text); // get the entered account number from the TextBox
+                bool accountFound = false;
+                foreach (Account acc in ac)
+                {
+                    acc.resetAttempts();
+                    accountFound = true;
+                    lblText.Text = "Please enter PIN:"; // change the text of lblAccountNo to "Please enter PIN"
+                    txtBoxPin.Visible = true;
+                    txtBoxAccountNo.Visible = false; // hide the account number TextBox
+
+                }
+
+                if (accountFound == false)
+                {
+                    // entered account number is not found
+                    MessageBox.Show("An account with this number doesn't exist. ");
+                    txtBoxAccountNo.Clear();
+                }
             }
-
-            // check that this is account exists
-            int accountNumber = int.Parse(txtBoxAccountNo.Text); // get the entered account number from the TextBox
-            bool accountFound = false;
-            foreach (Account acc in ac)
+            finally
             {
-                acc.resetAttempts();
-                accountFound = true;
-                lblText.Text = "Please enter PIN:"; // change the text of lblAccountNo to "Please enter PIN"
-                txtBoxPin.Visible = true;
-                txtBoxAccountNo.Visible = false; // hide the account number TextBox
-
-            }
-
-            if (accountFound == false)
-            {
-                // entered account number is not found
-                MessageBox.Show("An account with this number doesn't exist. ");
-                txtBoxAccountNo.Clear();
+                accountAccess.Release();
             }
         }
 
-        private void validatePIN()
+        private async void validatePIN()
         {
-            int pinEntered;
-            if (!int.TryParse(txtBoxPin.Text, out pinEntered)) // Get the entered PIN from the TextBox
+            await accountAccess.WaitAsync();
+            try
             {
-                MessageBox.Show("Please enter a 4-digit PIN.");
-                return;
-            }
-
-            int accountNumber = int.Parse(txtBoxAccountNo.Text); // get the entered account number from the TextBox
-
-            bool accountFound = false;
-            activeAccount = null;
-
-            foreach (Account acc in ac)
-            {
-                if (acc.getAccountNum() == accountNumber) // check if the account number matches
+                int pinEntered;
+                if (!int.TryParse(txtBoxPin.Text, out pinEntered)) // Get the entered PIN from the TextBox
                 {
-                    accountFound = true;
-                    if (acc.checkPin(pinEntered)) // check if the PIN is correct for the found account
+                    MessageBox.Show("Please enter a 4-digit PIN.");
+                    return;
+                }
+
+                int accountNumber = int.Parse(txtBoxAccountNo.Text); // get the entered account number from the TextBox
+
+                bool accountFound = false;
+                activeAccount = null;
+
+                foreach (Account acc in ac)
+                {
+                    if (acc.getAccountNum() == accountNumber) // check if the account number matches
                     {
-                        txtBoxPin.Visible = false; // hide the PIN TextBox
-                        lblText.Text = "";
-                        activeAccount = acc;  // set the current user account
-                        displayWelcomePage(true);
-                        MessageBox.Show("PIN is correct. Proceed to main menu.");
-                    }
-                    else
-                    {
-                        MessageBox.Show("Incorrect PIN. Please try again");
-                        if (acc.getAttempts() != 0)
+                        accountFound = true;
+                        if (acc.checkPin(pinEntered)) // check if the PIN is correct for the found account
                         {
-                            // if this account still has attempts left
-                            txtBoxPin.Clear();
-                            int numAttempts = acc.getAttempts();
-                            int newAttempts;
-                            newAttempts = numAttempts - 1;
-                            acc.decreaseAttempts(newAttempts);
-                            return;
+                            txtBoxPin.Visible = false; // hide the PIN TextBox
+                            lblText.Text = "";
+                            activeAccount = acc;  // set the current user account
+                            displayWelcomePage(true);
+                            MessageBox.Show("PIN is correct. Proceed to main menu.");
                         }
                         else
                         {
-                            // too many wrong attempts made, don't let this user continue guessing the pin.
-                            MessageBox.Show("Too many wrong PIN attempts, please try again later");
-                            restartLoginProcess();
+                            MessageBox.Show("Incorrect PIN. Please try again");
+                            if (acc.getAttempts() != 0)
+                            {
+                                // if this account still has attempts left
+                                txtBoxPin.Clear();
+                                int numAttempts = acc.getAttempts();
+                                int newAttempts;
+                                newAttempts = numAttempts - 1;
+                                acc.decreaseAttempts(newAttempts);
+                                return;
+                            }
+                            else
+                            {
+                                // too many wrong attempts made, don't let this user continue guessing the pin.
+                                MessageBox.Show("Too many wrong PIN attempts, please try again later");
+                                restartLoginProcess();
+                            }
                         }
                     }
                 }
-            }
 
-            // if the loop finishes without finding a matching account number then display an error message
-            if (!accountFound)
+                // if the loop finishes without finding a matching account number then display an error message
+                if (!accountFound)
+                {
+                    MessageBox.Show("Error");
+                    restartLoginProcess();
+                }
+            }
+            finally
             {
-                MessageBox.Show("Error");
-                restartLoginProcess();
+                accountAccess.Release();
             }
         }
 
@@ -233,6 +253,11 @@ namespace ATM_Simulator
         //helper function for the different pages
         private void setControlsVisibility(bool visible, params Control[] controls)
         {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => setControlsVisibility(visible, controls)));
+                return;
+            }
             foreach (Control control in controls)
             {
                 control.Visible = visible;
@@ -336,7 +361,7 @@ namespace ATM_Simulator
                 }
                 else
                 {
-               
+
                     MessageBox.Show("Please enter a valid amount.");
                 }
             }
@@ -355,38 +380,55 @@ namespace ATM_Simulator
          * If a data race is simulated, an artificial delay of 5 seconds 
          * is used for processing time.
          */
-        private void PerformDeposit(int amount)
+        private async void PerformDeposit(int amount)
         {
-            if (activeAccount != null)
+            await balanceAccess.WaitAsync();
+            try
             {
-                int currentBalance = activeAccount.getBalance();  // create a local variable to hold the current balance
-                Thread.Sleep(5000); // simulate processing time for data race scenario
-
-                if (dataRace) // simulate the data race
+                using (var LoadingForm = new LoadingForm())
                 {
-                    currentBalance += amount; // add the amount to the local varibale after the artificial delay
-
-                    activeAccount.setBalance(currentBalance); // update the balance after the delay
-
-                    // Display a message indicating successful deposit
-                    MessageBox.Show($"Successfully deposited £{amount}. Your current balance is £{activeAccount.getBalance()}");
-                    displayWelcomePage(true); // Display the welcome page again
-                    displayDepositCash(false);
-                }
-                else
-                {
-                    lock (activeAccount)   // use lock for critical section ie balance update
+                    LoadingForm.Show(this);
+                    await Task.Run(() =>
                     {
-                        currentBalance += amount; // add the amount to the local varibale after the artificial delay
 
-                        activeAccount.setBalance(currentBalance); // update the balance after the delay
+                        if (activeAccount != null)
+                        {
+                            int currentBalance = activeAccount.getBalance();  // create a local variable to hold the current balance
+                            Thread.Sleep(5000); // simulate processing time for data race scenario
 
-                        // display a message indicating successful deposit
-                        MessageBox.Show($"Successfully deposited £{amount}. Your current balance is £{activeAccount.getBalance()}");
-                        displayWelcomePage(true); // display the welcome page again
-                        displayDepositCash(false);
-                    }
+                            if (dataRace) // simulate the data race
+                            {
+                                currentBalance += amount; // add the amount to the local varibale after the artificial delay
+
+                                activeAccount.setBalance(currentBalance); // update the balance after the delay
+
+                                // Display a message indicating successful deposit
+                                MessageBox.Show($"Successfully deposited £{amount}. Your current balance is £{activeAccount.getBalance()}");
+                                displayWelcomePage(true); // Display the welcome page again
+                                displayDepositCash(false);
+                            }
+                            else
+                            {
+                                lock (activeAccount)   // use lock for critical section ie balance update
+                                {
+                                    currentBalance += amount; // add the amount to the local varibale after the artificial delay
+
+                                    activeAccount.setBalance(currentBalance); // update the balance after the delay
+
+                                    // display a message indicating successful deposit
+                                    MessageBox.Show($"Successfully deposited £{amount}. Your current balance is £{activeAccount.getBalance()}");
+                                    displayWelcomePage(true); // display the welcome page again
+                                    displayDepositCash(false);
+                                }
+                            }
+                        }
+                    });
+                    LoadingForm.Close();
                 }
+            }
+            finally
+            {
+                balanceAccess.Release();
             }
         }
 
@@ -399,47 +441,65 @@ namespace ATM_Simulator
          * If a data race is simulated, an artificial delay of 5 seconds 
          * is used for processing time.
          */
-        private void PerformWithdrawal(int amount)
+        private async void PerformWithdrawal(int amount)
         {
-            if (activeAccount != null)
+            await balanceAccess.WaitAsync();
+            try
             {
-
-                int currentBalance = activeAccount.getBalance(); // create a local variable to hold the current balance
-                Thread.Sleep(5000); // simulate processing time for data race scenario
-
-                if (dataRace) // simulate the data race
+                using (var LoadingForm = new LoadingForm())
                 {
-                    currentBalance -= amount; // add the amount to the local varibale after the artificial delay
+                    LoadingForm.Show(this);
 
-                    activeAccount.setBalance(currentBalance); // update the balance after the delay
-
-                    // display a message indicating successful withdrawal
-                    MessageBox.Show($"Successfully withdrew £{amount}. Your current balance is £{activeAccount.getBalance()}");
-                    displayWelcomePage(true); // display the welcome page again
-                    displayWithdrawCash(false);
-                }
-                else
-                {
-                    lock (activeAccount)  // use lock for critical section ie balance update
+                    await Task.Run(() =>
                     {
-                        if (activeAccount.getBalance() >= amount) // check if there are sufficient funds
+                        if (activeAccount != null)
                         {
-                            currentBalance -= amount; // add the amount to the local varibale after the artificial delay
 
-                            activeAccount.setBalance(currentBalance); // update the balance after the delay
+                            int currentBalance = activeAccount.getBalance(); // create a local variable to hold the current balance
+                            Thread.Sleep(5000); // simulate processing time for data race scenario
 
-                            // Display a message indicating successful withdrawal
-                            MessageBox.Show($"Successfully withdrew £{amount}. Your current balance is £{activeAccount.getBalance()}");
-                            displayWelcomePage(true); // Display the welcome page again
-                            displayWithdrawCash(false);
+                            if (dataRace) // simulate the data race
+                            {
+                                currentBalance -= amount; // add the amount to the local varibale after the artificial delay
 
+                                activeAccount.setBalance(currentBalance); // update the balance after the delay
+
+                                // display a message indicating successful withdrawal
+                                MessageBox.Show($"Successfully withdrew £{amount}. Your current balance is £{activeAccount.getBalance()}");
+                                displayWelcomePage(true); // display the welcome page again
+                                displayWithdrawCash(false);
+                            }
+                            else
+                            {
+                                lock (activeAccount)  // use lock for critical section ie balance update
+                                {
+                                    if (activeAccount.getBalance() >= amount) // check if there are sufficient funds
+                                    {
+                                        currentBalance -= amount; // add the amount to the local varibale after the artificial delay
+
+                                        activeAccount.setBalance(currentBalance); // update the balance after the delay
+
+                                        // Display a message indicating successful withdrawal
+                                        MessageBox.Show($"Successfully withdrew £{amount}. Your current balance is £{activeAccount.getBalance()}");
+                                        displayWelcomePage(true); // Display the welcome page again
+                                        displayWithdrawCash(false);
+
+                                    }
+                                    else
+                                    {
+                                        MessageBox.Show($"Insufficient funds. Your current balance is £{activeAccount.getBalance()}");
+                                    }
+                                }
+
+                            }
                         }
-                        else
-                        {
-                            MessageBox.Show($"Insufficient funds. Your current balance is £{activeAccount.getBalance()}");
-                        }
-                    }
+                    });
+                    LoadingForm.Close();
                 }
+            }
+            finally
+            {
+                balanceAccess.Release();
             }
         }
 
