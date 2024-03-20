@@ -28,9 +28,9 @@ namespace ATM_Simulator
             InitializeComponent();
             ac = new Account[]
             {
-            new Account(300, 1111, 111111, 3),
-            new Account(750, 2222, 222222, 3),
-            new Account(3000, 3333, 333333, 3)
+            new Account(300, 1111, 111111, 3, false),
+            new Account(750, 2222, 222222, 3, false),
+            new Account(3000, 3333, 333333, 3, false)
             };
         }
 
