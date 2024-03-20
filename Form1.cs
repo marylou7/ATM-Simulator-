@@ -58,7 +58,7 @@ namespace ATM_Simulator
 
         private void txtBoxPin_TextChanged(object sender, EventArgs e)
         {
-        
+
             if (txtBoxPin.Text.Length > 4) //check if the pin is at the limit
             {
                 txtBoxPin.Text = txtBoxPin.Text.Substring(0, 4);   // if the length is greater than 4 , truncate the text to 4 
@@ -73,11 +73,11 @@ namespace ATM_Simulator
             Button button = sender as Button;
             if (button != null)
             {
-                if (txtBoxAccountNo.Visible) 
+                if (txtBoxAccountNo.Visible)
                 {
                     txtBoxAccountNo.Text += button.Text;
                 }
-                else if (txtBoxPin.Visible) 
+                else if (txtBoxPin.Visible)
                 {
                     txtBoxPin.Text += button.Text;
 
@@ -105,7 +105,7 @@ namespace ATM_Simulator
                 displayWelcomePage(true);
                 displayWithdrawCash(false);
                 displayDepositCash(false);
-                
+
             }
         }
 
@@ -161,15 +161,30 @@ namespace ATM_Simulator
 
             // check that this is account exists
             int accountNumber = int.Parse(txtBoxAccountNo.Text); // get the entered account number from the TextBox
+
             bool accountFound = false;
+
             foreach (Account acc in ac)
             {
-                acc.resetAttempts();
-                accountFound = true;
-                lblText.Text = "Please enter PIN:"; // change the text of lblAccountNo to "Please enter PIN"
-                txtBoxPin.Visible = true;
-                txtBoxAccountNo.Visible = false; // hide the account number TextBox
 
+                acc.resetAttempts();
+                if (acc.getAccountNum() == accountNumber)
+                {
+                    if (acc.getStatus() == true)
+                    {
+                        // if this account is blocked
+                        MessageBox.Show("This account is blocked, please contact your bank to unblock");
+                        txtBoxAccountNo.Clear();
+                        return;
+                    }
+                    else
+                    {
+                        accountFound = true;
+                        lblText.Text = "Please enter PIN:"; // change the text of lblAccountNo to "Please enter PIN"
+                        txtBoxPin.Visible = true;
+                        txtBoxAccountNo.Visible = false; // hide the account number TextBox
+                    }
+                }
             }
 
             if (accountFound == false)
@@ -183,63 +198,61 @@ namespace ATM_Simulator
         // This method validates the entered PIN.
         private void validatePIN()
         {
-           
-                int pinEntered;
-                if (!int.TryParse(txtBoxPin.Text, out pinEntered)) // get the entered PIN from the TextBox
+            int pinEntered;
+            if (!int.TryParse(txtBoxPin.Text, out pinEntered)) // Get the entered PIN from the TextBox
+            {
+                MessageBox.Show("Please enter a 4-digit PIN.");
+                return;
+            }
+
+            int accountNumber = int.Parse(txtBoxAccountNo.Text); // get the entered account number from the TextBox
+
+            bool accountFound = false;
+            activeAccount = null;
+
+            foreach (Account acc in ac)
+            {
+                if (acc.getAccountNum() == accountNumber) // check if the account number matches
                 {
-                    MessageBox.Show("Please enter a 4-digit PIN.");
-                    return;
-                }
-
-                int accountNumber = int.Parse(txtBoxAccountNo.Text); // get the entered account number from the TextBox
-
-                bool accountFound = false;
-                activeAccount = null;
-
-                foreach (Account acc in ac)
-                {
-                    if (acc.getAccountNum() == accountNumber) // check if the account number matches
+                    accountFound = true;
+                    if (acc.checkPin(pinEntered)) // check if the PIN is correct for the found account
                     {
-                        accountFound = true;
-                        if (acc.checkPin(pinEntered)) // check if the PIN is correct for the found account
+                        txtBoxPin.Visible = false; // hide the PIN TextBox
+                        lblText.Text = "";
+                        activeAccount = acc;  // set the current user account
+                        displayWelcomePage(true);
+                        MessageBox.Show("PIN is correct. Proceed to main menu.");
+                    }
+                    else
+                    {
+                        MessageBox.Show("Incorrect PIN. Please try again");
+                        if (acc.getAttempts() != 0)
                         {
-                            txtBoxPin.Visible = false; // hide the PIN TextBox
-                            lblText.Text = "";
-                            activeAccount = acc;  // set the current user account
-                            displayWelcomePage(true);
-
+                            // if this account still has attempts left
+                            txtBoxPin.Clear();
+                            int numAttempts = acc.getAttempts();
+                            int newAttempts;
+                            newAttempts = numAttempts - 1;
+                            acc.decreaseAttempts(newAttempts);
+                            return;
                         }
                         else
                         {
-                            MessageBox.Show("Incorrect PIN. Please try again");
-                            if (acc.getAttempts() != 0)
-                            {
-                                // if this account still has attempts left
-                                txtBoxPin.Clear();
-                                int numAttempts = acc.getAttempts();
-                                int newAttempts;
-                                newAttempts = numAttempts - 1;
-                                acc.decreaseAttempts(newAttempts);
-                                return;
-                            }
-                            else
-                            {
-                                // too many wrong attempts made, don't let this user continue guessing the pin.
-                                MessageBox.Show("Too many wrong PIN attempts, please try again later");
-                                restartLoginProcess();
-                            }
+                            // too many wrong attempts made, block this account.
+                            MessageBox.Show("Too many wrong PIN attempts, your account has now been blocked. ");
+                            acc.blockAccount(); // blocks account
+                            restartLoginProcess();
                         }
                     }
-                
-
-                // if the loop finishes without finding a matching account number then display an error message
-                if (!accountFound)
-                {
-                    MessageBox.Show("Error");
-                    restartLoginProcess();
                 }
             }
-           
+
+            // if the loop finishes without finding a matching account number then display an error message
+            if (!accountFound)
+            {
+                MessageBox.Show("Error");
+                restartLoginProcess();
+            }
         }
 
 
@@ -336,7 +349,8 @@ namespace ATM_Simulator
         }
 
         // this function updates the user interface - the lblMessage
-        private void updateUI() {
+        private void updateUI()
+        {
             //calls the update function for the label message to make sure it's in sync with the user interface thread. 
             this.Invoke((MethodInvoker)delegate
             {
@@ -440,7 +454,8 @@ namespace ATM_Simulator
             {
                 ChangeMessageText("Successfully withdrew £" + amount + " Bank Balance: £" + balance);
             }
-            else {
+            else
+            {
                 ChangeMessageText("Successfully deposited £" + amount + " Bank Balance: £" + balance);
             }
             lblMessage.Visible = true;
@@ -491,20 +506,20 @@ namespace ATM_Simulator
                     // display a message for successful deposit
                     displayTransactionOutcome(amount, activeAccount.getBalance(), "deposit");
                     lblMessage.Visible = false;
-                    displayWelcomePage(true); 
-                  
+                    displayWelcomePage(true);
+
                 }
                 else
                 {
                     Thread.Sleep(5000); // simulate processing time 
                     semaphore.WaitOne(); //use a semaphore for critical section
-                 
+
                     try
                     {
                         Console.WriteLine("Executing deposit operation with semaphore...");
 
                         int currentBalance = activeAccount.getBalance(); // Read bank account total into local variable
-                       
+
                         Console.WriteLine("currentBalance: {0}", currentBalance);
 
                         currentBalance += amount; // Change total according to the operation
@@ -514,7 +529,7 @@ namespace ATM_Simulator
                         displayTransactionOutcome(amount, activeAccount.getBalance(), "deposit");
                         lblMessage.Visible = false;
                         displayWelcomePage(true); // Display the welcome page again
-                       
+
                         Console.WriteLine("Finished deposit operation with semaphore...");
                     }
                     finally
@@ -564,7 +579,8 @@ namespace ATM_Simulator
                         lblMessage.Visible = false;
                         displayWelcomePage(true); // display the welcome page again
                     }
-                    else {
+                    else
+                    {
 
                         MessageBox.Show($"Insufficient funds. Your current balance is £{activeAccount.getBalance()}");
                         lblMessage.Visible = false;
@@ -588,13 +604,13 @@ namespace ATM_Simulator
                         {
                             currentBalance -= amount; // Change total according to the operation
                             activeAccount.setBalance(currentBalance); // Write total into the bank account total
-                           
+
                             // Display a message indicating successful withdrawal
                             displayTransactionOutcome(amount, activeAccount.getBalance(), "withdrawal");
                             lblMessage.Visible = false;
                             displayWelcomePage(true); // display the welcome page again
-                            
-                           
+
+
                             Console.WriteLine("Finished withdrawal operation with semaphore...");
                         }
                         else
@@ -642,16 +658,16 @@ namespace ATM_Simulator
                         btnOther_Click(sender, e, "withdrawal");
                         return;
                 }
-                    PerformWithdrawal(amount);
-                
+                PerformWithdrawal(amount);
+
             }
         }
 
-      
+
     }
 
 
-     //custom input dialog form used for the other button
+    //custom input dialog form used for the other button
     public class InputDialog : Form
     {
         private TextBox textBox;
@@ -704,14 +720,16 @@ namespace ATM_Simulator
         private int pin;
         private int accountNum;
         private int numAttempts; // number of pin attempts
+        private bool status; // true if blocked, false if not blocked
 
         // a constructor that takes initial values for each of the attributes (balance, pin, accountNumber)
-        public Account(int balance, int pin, int accountNum, int numAttempts)
+        public Account(int balance, int pin, int accountNum, int numAttempts, bool status)
         {
             this.balance = balance;
             this.pin = pin;
             this.accountNum = accountNum;
             this.numAttempts = numAttempts;
+            this.status = status;
         }
 
         //getter and setter functions for balance
@@ -743,6 +761,18 @@ namespace ATM_Simulator
         {
             this.numAttempts = newAttempts;
         }
+        // get account status
+        public bool getStatus()
+        {
+            return status;
+        }
+
+        // change the account's status 
+        public void blockAccount()
+        {
+            status = true;
+        }
+
 
 
         /*
@@ -763,7 +793,7 @@ namespace ATM_Simulator
             }
             else
             {
-                return false;
+                return true;
             }
         }
 
@@ -783,7 +813,6 @@ namespace ATM_Simulator
             else
             {
                 return false;
-
             }
         }
 
