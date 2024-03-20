@@ -1,10 +1,10 @@
 ﻿/**
- * ATM Simulator Team 6
- * Team members:
- * - Marylou das Chagas e Silva 2501402
- * - Lirit Dampier 2560877 
- * - Troy Tsang 2506759
- */
+* ATM Simulator Team 6
+* Team members:
+* - Marylou das Chagas e Silva 2501402
+* - Lirit Dampier 2560877 
+* - Troy Tsang 2506759
+*/
 
 using System;
 using System.Collections.Generic;

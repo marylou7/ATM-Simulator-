@@ -12,6 +12,8 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,11 +26,9 @@ namespace ATM_Simulator
     {
         private Account activeAccount; //local referance to the array of accounts
         private Account[] ac; //this is a referance to the account that is being used
-        private bool dataRace;
-        private SemaphoreSlim accountAccess = new SemaphoreSlim(1);
-        private SemaphoreSlim balanceAccess = new SemaphoreSlim(1);
+        private bool dataRace; //keeps track of the d
 
-
+        private Semaphore semaphore = new Semaphore(1, 1); //used for the non data race
 
         public ATM(Account[] ac, bool dr)
         {
@@ -51,68 +51,87 @@ namespace ATM_Simulator
         {
             if (txtBoxAccountNo.Text.Length > 6) //check if the account number is at the limit
             {
-                txtBoxAccountNo.Text = txtBoxAccountNo.Text.Substring(0, 6);  // if the length is greater than 6 digits, truncate the text to 6 digits
-                txtBoxAccountNo.SelectionStart = txtBoxAccountNo.Text.Length;  // set the cursor position to the end of the text
+                txtBoxAccountNo.Text = txtBoxAccountNo.Text.Substring(0, 6);  // if the length is greater than 6, truncate the text to 6
+                txtBoxAccountNo.SelectionStart = txtBoxAccountNo.Text.Length;  // set the cursor position 
             }
         }
 
         private void txtBoxPin_TextChanged(object sender, EventArgs e)
         {
-            TextBox pinTextBox = sender as TextBox;
-            if (pinTextBox.Text.Length > 4) //check if the pin is at the limit
+        
+            if (txtBoxPin.Text.Length > 4) //check if the pin is at the limit
             {
-                // if the length is greater than 4 digits, truncate the text to 4 digits
-                pinTextBox.Text = pinTextBox.Text.Substring(0, 4);
-                // set the cursor position to the end of the text
-                pinTextBox.SelectionStart = pinTextBox.Text.Length;
+                txtBoxPin.Text = txtBoxPin.Text.Substring(0, 4);   // if the length is greater than 4 , truncate the text to 4 
+                txtBoxPin.SelectionStart = txtBoxPin.Text.Length;  // set the cursor position 
             }
         }
 
 
+        // this method handles the click event of the number buttons.
         private void numberButton_Click(object sender, EventArgs e)
         {
             Button button = sender as Button;
             if (button != null)
             {
-                if (txtBoxAccountNo.Visible) // check if the account number TextBox is visible
+                if (txtBoxAccountNo.Visible) 
                 {
                     txtBoxAccountNo.Text += button.Text;
                 }
-                else if (txtBoxPin.Visible) // check if the PIN TextBox is visible
+                else if (txtBoxPin.Visible) 
                 {
                     txtBoxPin.Text += button.Text;
+
                 }
             }
         }
 
 
+
+        /**
+        *this method handles the click event of the cancel button by either restarting the login process
+        *or displaying the welcome page
+        */
         private void btnCancel_Click(object sender, EventArgs e)
         {
             if (txtBoxAccountNo.Visible || txtBoxPin.Visible)
             {
                 restartLoginProcess();
+                clearTextFromTextBox();
             }
             else
             {
+                clearTextFromTextBox();
+                lblText.Visible = false;
                 displayWelcomePage(true);
                 displayWithdrawCash(false);
                 displayDepositCash(false);
+                
             }
         }
 
+        /**
+         * this fucnitons clears the current text in a textBox
+        */
         private void btnClear_Click(object sender, EventArgs e)
+        {
+            clearTextFromTextBox();
+        }
+
+        //helper function for clear button
+        private void clearTextFromTextBox()
         {
             if (txtBoxAccountNo.Visible == true)
             {
-                txtBoxAccountNo.Text = ""; // clear the text in the textbox
+                txtBoxAccountNo.Text = "";
             }
             else if (txtBoxPin.Visible == true)
             {
-                txtBoxPin.Text = ""; // clear the text in the pin textbox
+                txtBoxPin.Text = "";
             }
         }
 
 
+        //this funtion handles the input validation
         private void btnEnter_Click(object sender, EventArgs e)
         {
             if (txtBoxPin.Visible || txtBoxAccountNo.Visible)
@@ -121,59 +140,52 @@ namespace ATM_Simulator
                 {
                     validatePIN();
                 }
-                else
+                else if (txtBoxAccountNo.Visible)
                 {
                     validateAccountNumber();
+
                 }
             }
         }
 
 
-        private async void validateAccountNumber()
+        // This method validates the entered account number.
+        private void validateAccountNumber()
         {
-            await accountAccess.WaitAsync();
-            try
+            if (txtBoxAccountNo.Text.Length < 6) // check if the account number is less than 6 digits
             {
-                if (txtBoxAccountNo.Text.Length < 6) // check if the account number is less than 6 digits
-                {
-                    MessageBox.Show("Please enter a valid 6-digit account number.");
-                    txtBoxAccountNo.Text = "";
-                    return;
-                }
-
-                // check that this is account exists
-                int accountNumber = int.Parse(txtBoxAccountNo.Text); // get the entered account number from the TextBox
-                bool accountFound = false;
-                foreach (Account acc in ac)
-                {
-                    acc.resetAttempts();
-                    accountFound = true;
-                    lblText.Text = "Please enter PIN:"; // change the text of lblAccountNo to "Please enter PIN"
-                    txtBoxPin.Visible = true;
-                    txtBoxAccountNo.Visible = false; // hide the account number TextBox
-
-                }
-
-                if (accountFound == false)
-                {
-                    // entered account number is not found
-                    MessageBox.Show("An account with this number doesn't exist. ");
-                    txtBoxAccountNo.Clear();
-                }
+                MessageBox.Show("Please enter a valid 6-digit account number.");
+                txtBoxAccountNo.Text = "";
+                return;
             }
-            finally
+
+            // check that this is account exists
+            int accountNumber = int.Parse(txtBoxAccountNo.Text); // get the entered account number from the TextBox
+            bool accountFound = false;
+            foreach (Account acc in ac)
             {
-                accountAccess.Release();
+                acc.resetAttempts();
+                accountFound = true;
+                lblText.Text = "Please enter PIN:"; // change the text of lblAccountNo to "Please enter PIN"
+                txtBoxPin.Visible = true;
+                txtBoxAccountNo.Visible = false; // hide the account number TextBox
+
+            }
+
+            if (accountFound == false)
+            {
+                // entered account number is not found
+                MessageBox.Show("An account with this number doesn't exist. ");
+                txtBoxAccountNo.Clear();
             }
         }
 
-        private async void validatePIN()
+        // This method validates the entered PIN.
+        private void validatePIN()
         {
-            await accountAccess.WaitAsync();
-            try
-            {
+           
                 int pinEntered;
-                if (!int.TryParse(txtBoxPin.Text, out pinEntered)) // Get the entered PIN from the TextBox
+                if (!int.TryParse(txtBoxPin.Text, out pinEntered)) // get the entered PIN from the TextBox
                 {
                     MessageBox.Show("Please enter a 4-digit PIN.");
                     return;
@@ -195,7 +207,7 @@ namespace ATM_Simulator
                             lblText.Text = "";
                             activeAccount = acc;  // set the current user account
                             displayWelcomePage(true);
-                            MessageBox.Show("PIN is correct. Proceed to main menu.");
+
                         }
                         else
                         {
@@ -218,7 +230,7 @@ namespace ATM_Simulator
                             }
                         }
                     }
-                }
+                
 
                 // if the loop finishes without finding a matching account number then display an error message
                 if (!accountFound)
@@ -227,12 +239,8 @@ namespace ATM_Simulator
                     restartLoginProcess();
                 }
             }
-            finally
-            {
-                accountAccess.Release();
-            }
+           
         }
-
 
 
         private void restartLoginProcess()
@@ -250,7 +258,7 @@ namespace ATM_Simulator
             lblText.Text = "Enter Account Number";
         }
 
-        //helper function for the different pages
+        //helper function for visibility of the different pages
         private void setControlsVisibility(bool visible, params Control[] controls)
         {
             if (this.InvokeRequired)
@@ -317,120 +325,207 @@ namespace ATM_Simulator
                         amount = 500;
                         break;
                     case "btndOther":
-                        btnOther_Click(sender, e);
-                        break;
+                        btnOther_Click(sender, e, "deposit");
+                        return;
                 }
                 Console.WriteLine(amount.ToString());
-                if (amount > 0) // if amount is greater than 0, perform the deposit
-                {
 
-                    PerformDeposit(amount);
 
-                }
+                PerformDeposit(amount);
             }
         }
 
-
+        // this function updates the user interface - the lblMessage
+        private void updateUI() {
+            //calls the update function for the label message to make sure it's in sync with the user interface thread. 
+            this.Invoke((MethodInvoker)delegate
+            {
+                lblMessage.Update();
+            });
+        }
 
 
         private void btnCheckBalance_Click(object sender, EventArgs e)
         {
-            if (activeAccount != null)
-            {
+
+            if (activeAccount != null)  //check if an active account exists.
+
+            { // get the balance of the active account and display it.
                 int balance = activeAccount.getBalance();
-                MessageBox.Show($"Your account balance is : £{balance}"); // Display the user's account balance
+                displayAccountBalance(balance);
+
             }
         }
 
+
+        // This function handles the click event of the return card button.
         private void btnReturnCard_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Goodbye!");
+
+            // hide the welcome page, display a goodbye message, and make the message label visible.
+            displayWelcomePage(false);
+            ChangeMessageText("Goodbye!");
+            lblMessage.Visible = true;
+
+            // update UI 
+            updateUI();
+            Thread.Sleep(2000);
+
+            // hide the message label, and restart the login process.
+            lblMessage.Visible = false;
             restartLoginProcess();
         }
 
-        private void btnOther_Click(object sender, EventArgs e)
+
+        /**
+         * this function handles other button click event. It takes in the transactiontype. eg deposit or withdrawal
+         */
+        private void btnOther_Click(object sender, EventArgs e, string transactionType)
         {
-            InputDialog inputDialog = new InputDialog("Enter the amount you would like to withdraw", "Withdraw Cash", "0");
+            InputDialog inputDialog = null;
+
+            if (transactionType == "withdrawal")
+            {
+                Console.WriteLine("Withdrawl taking place...");
+                inputDialog = new InputDialog("Enter the amount you would like to withdraw", "Withdraw Cash", "0");
+            }
+            else if (transactionType == "deposit")
+            {
+                inputDialog = new InputDialog("Enter the amount you would like to deposit", "Deposit Cash", "0");
+                Console.WriteLine("deposti taking place...");
+            }
+            else
+            {
+                MessageBox.Show("Invalid transaction type.");
+                return;
+            }
 
             if (inputDialog.ShowDialog() == DialogResult.OK)
             {
                 int amount;
                 if (int.TryParse(inputDialog.InputValue, out amount)) // check if the input is a valid integer
                 {
-                    PerformWithdrawal(amount);
+                    if (transactionType == "withdrawal")
+                    {
+                        PerformWithdrawal(amount);
+                    }
+                    else if (transactionType == "deposit")
+                    {
+                        PerformDeposit(amount);
+                    }
                 }
                 else
                 {
-
                     MessageBox.Show("Please enter a valid amount.");
                 }
             }
             else
             {
-                MessageBox.Show("Withdrawal canceled.");
+                MessageBox.Show("Transaction canceled.");
             }
+        }
+
+
+        //helper function for UI
+        private void ChangeMessageText(string newText)
+        {
+            // Update the text of lblMessage
+            lblMessage.Text = newText;
+        }
+
+
+        private void displayTransactionOutcome(int amount, int balance, string type)
+        {
+            if (type == "withdrawal")
+            {
+                ChangeMessageText("Successfully withdrew £" + amount + " Bank Balance: £" + balance);
+            }
+            else {
+                ChangeMessageText("Successfully deposited £" + amount + " Bank Balance: £" + balance);
+            }
+            lblMessage.Visible = true;
+            updateUI();
+            Thread.Sleep(2000);
+
+            lblMessage.Visible = false;
+        }
+
+        private void displayAccountBalance(int balance)
+        {
+            displayWelcomePage(false);
+            ChangeMessageText("Bank Balance: £" + balance);
+            lblMessage.Visible = true;
+            updateUI();
+            Thread.Sleep(2000);
+            lblMessage.Visible = false;
+            displayWelcomePage(true);
         }
 
         /**
-         * function to deposit an amount into the active account
-         * @param amount
-         * 
-         * This function deposits the specified amount into the active account. 
-         * It first checks if the account is null
-         * If a data race is simulated, an artificial delay of 5 seconds 
-         * is used for processing time.
-         */
-        private async void PerformDeposit(int amount)
+        * function to deposit an amount into the active account
+        * @param amount
+        * 
+        * This function deposits the specified amount into the active account. 
+        * It first checks if the account is null
+        * If a data race is simulated, an artificial delay of 5 seconds 
+        * is used for processing time.
+        */
+        private void PerformDeposit(int amount)
         {
-            await balanceAccess.WaitAsync();
-            try
+            ChangeMessageText("Processing Transaction. Please wait...");
+            displayDepositCash(false);
+            lblMessage.Visible = true;
+            updateUI();
+            if (activeAccount != null)
             {
-                using (var LoadingForm = new LoadingForm())
+                Console.WriteLine("Performing deposit operation...");
+
+                if (dataRace) // simulate the data race
                 {
-                    LoadingForm.Show(this);
-                    await Task.Run(() =>
+                    Console.WriteLine("Simulating data race scenario for deposit...");
+                    int currentBalance = activeAccount.getBalance(); // read bank account total into local variable
+                    Thread.Sleep(5000); // simulate processing time for data race
+                    currentBalance += amount; // change total 
+                    activeAccount.setBalance(currentBalance); // set total into the bank account total
+
+                    // display a message for successful deposit
+                    displayTransactionOutcome(amount, activeAccount.getBalance(), "deposit");
+                    lblMessage.Visible = false;
+                    displayWelcomePage(true); 
+                  
+                }
+                else
+                {
+                    Thread.Sleep(5000); // simulate processing time 
+                    semaphore.WaitOne(); //use a semaphore for critical section
+                 
+                    try
                     {
+                        Console.WriteLine("Executing deposit operation with semaphore...");
 
-                        if (activeAccount != null)
-                        {
-                            int currentBalance = activeAccount.getBalance();  // create a local variable to hold the current balance
-                            Thread.Sleep(5000); // simulate processing time for data race scenario
+                        int currentBalance = activeAccount.getBalance(); // Read bank account total into local variable
+                       
+                        Console.WriteLine("currentBalance: {0}", currentBalance);
 
-                            if (dataRace) // simulate the data race
-                            {
-                                currentBalance += amount; // add the amount to the local varibale after the artificial delay
+                        currentBalance += amount; // Change total according to the operation
+                        activeAccount.setBalance(currentBalance); // Write total into the bank account total
 
-                                activeAccount.setBalance(currentBalance); // update the balance after the delay
-
-                                // Display a message indicating successful deposit
-                                MessageBox.Show($"Successfully deposited £{amount}. Your current balance is £{activeAccount.getBalance()}");
-                                displayWelcomePage(true); // Display the welcome page again
-                                displayDepositCash(false);
-                            }
-                            else
-                            {
-                                lock (activeAccount)   // use lock for critical section ie balance update
-                                {
-                                    currentBalance += amount; // add the amount to the local varibale after the artificial delay
-
-                                    activeAccount.setBalance(currentBalance); // update the balance after the delay
-
-                                    // display a message indicating successful deposit
-                                    MessageBox.Show($"Successfully deposited £{amount}. Your current balance is £{activeAccount.getBalance()}");
-                                    displayWelcomePage(true); // display the welcome page again
-                                    displayDepositCash(false);
-                                }
-                            }
-                        }
-                    });
-                    LoadingForm.Close();
+                        // Display a message indicating successful deposit
+                        displayTransactionOutcome(amount, activeAccount.getBalance(), "deposit");
+                        lblMessage.Visible = false;
+                        displayWelcomePage(true); // Display the welcome page again
+                       
+                        Console.WriteLine("Finished deposit operation with semaphore...");
+                    }
+                    finally
+                    {
+                        // release the semaphore after the critical section
+                        semaphore.Release();
+                    }
                 }
             }
-            finally
-            {
-                balanceAccess.Release();
-            }
         }
+
 
         /**
          * function to withdraw an amount into the active account
@@ -441,65 +536,80 @@ namespace ATM_Simulator
          * If a data race is simulated, an artificial delay of 5 seconds 
          * is used for processing time.
          */
-        private async void PerformWithdrawal(int amount)
+
+        private void PerformWithdrawal(int amount)
         {
-            await balanceAccess.WaitAsync();
-            try
+
+            ChangeMessageText("Processing Transaction. Please wait...");
+            displayWithdrawCash(false);
+            lblMessage.Visible = true;
+            updateUI();
+            if (activeAccount != null)
             {
-                using (var LoadingForm = new LoadingForm())
+                Console.WriteLine("Performing withdrawal operation...");
+
+                if (dataRace) // Simulate the data race
                 {
-                    LoadingForm.Show(this);
+                    Console.WriteLine("Simulating data race scenario for withdrawal...");
+                    int currentBalance = activeAccount.getBalance(); // read bank account total into local variable
+                    Thread.Sleep(5000); // simulate processing time for data race scenario
 
-                    await Task.Run(() =>
+                    if (activeAccount.decrementBalance(amount))
                     {
-                        if (activeAccount != null)
-                        {
+                        currentBalance -= amount; // change total 
+                        activeAccount.setBalance(currentBalance); // set total into the bank account total
 
-                            int currentBalance = activeAccount.getBalance(); // create a local variable to hold the current balance
-                            Thread.Sleep(5000); // simulate processing time for data race scenario
+                        // display a message indicating successful withdrawal
+                        displayTransactionOutcome(amount, activeAccount.getBalance(), "withdrawal");
+                        lblMessage.Visible = false;
+                        displayWelcomePage(true); // display the welcome page again
+                    }
+                    else {
 
-                            if (dataRace) // simulate the data race
-                            {
-                                currentBalance -= amount; // add the amount to the local varibale after the artificial delay
-
-                                activeAccount.setBalance(currentBalance); // update the balance after the delay
-
-                                // display a message indicating successful withdrawal
-                                MessageBox.Show($"Successfully withdrew £{amount}. Your current balance is £{activeAccount.getBalance()}");
-                                displayWelcomePage(true); // display the welcome page again
-                                displayWithdrawCash(false);
-                            }
-                            else
-                            {
-                                lock (activeAccount)  // use lock for critical section ie balance update
-                                {
-                                    if (activeAccount.getBalance() >= amount) // check if there are sufficient funds
-                                    {
-                                        currentBalance -= amount; // add the amount to the local varibale after the artificial delay
-
-                                        activeAccount.setBalance(currentBalance); // update the balance after the delay
-
-                                        // Display a message indicating successful withdrawal
-                                        MessageBox.Show($"Successfully withdrew £{amount}. Your current balance is £{activeAccount.getBalance()}");
-                                        displayWelcomePage(true); // Display the welcome page again
-                                        displayWithdrawCash(false);
-
-                                    }
-                                    else
-                                    {
-                                        MessageBox.Show($"Insufficient funds. Your current balance is £{activeAccount.getBalance()}");
-                                    }
-                                }
-
-                            }
-                        }
-                    });
-                    LoadingForm.Close();
+                        MessageBox.Show($"Insufficient funds. Your current balance is £{activeAccount.getBalance()}");
+                        lblMessage.Visible = false;
+                        displayWelcomePage(true); // display the welcome page again
+                    }
                 }
-            }
-            finally
-            {
-                balanceAccess.Release();
+                else
+                {
+
+                    Thread.Sleep(5000); // simulate processing time 
+                    semaphore.WaitOne(); //semaphore for critical section
+                    try
+                    {
+                        Console.WriteLine("Executing withdrawal operation with semaphore...");
+
+                        int currentBalance = activeAccount.getBalance(); // Read bank account total into local variable
+                        Console.WriteLine("currentBalance: {0}", currentBalance);
+
+
+                        if (activeAccount.decrementBalance(amount))
+                        {
+                            currentBalance -= amount; // Change total according to the operation
+                            activeAccount.setBalance(currentBalance); // Write total into the bank account total
+                           
+                            // Display a message indicating successful withdrawal
+                            displayTransactionOutcome(amount, activeAccount.getBalance(), "withdrawal");
+                            lblMessage.Visible = false;
+                            displayWelcomePage(true); // display the welcome page again
+                            
+                           
+                            Console.WriteLine("Finished withdrawal operation with semaphore...");
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Insufficient funds. Your current balance is £{activeAccount.getBalance()}");
+                            lblMessage.Visible = false;
+                            displayWelcomePage(true); // display the welcome page again
+                        }
+                    }
+                    finally
+                    {
+                        // release the semaphore after the critical section
+                        semaphore.Release();
+                    }
+                }
             }
         }
 
@@ -529,20 +639,19 @@ namespace ATM_Simulator
                         amount = 500;
                         break;
                     case "btnOther":
-                        btnOther_Click(sender, e);
-                        break;
+                        btnOther_Click(sender, e, "withdrawal");
+                        return;
                 }
-
-                if (amount > 0) // if amount is greater than 0, perform the withdrawal
-                {
                     PerformWithdrawal(amount);
-                }
+                
             }
         }
 
-
+      
     }
 
+
+     //custom input dialog form used for the other button
     public class InputDialog : Form
     {
         private TextBox textBox;
@@ -654,7 +763,7 @@ namespace ATM_Simulator
             }
             else
             {
-                return true;
+                return false;
             }
         }
 
@@ -674,6 +783,7 @@ namespace ATM_Simulator
             else
             {
                 return false;
+
             }
         }
 

@@ -67,6 +67,7 @@
             this.btnCheckBalance = new System.Windows.Forms.Button();
             this.btnReturnCard = new System.Windows.Forms.Button();
             this.btnDepositCash = new System.Windows.Forms.Button();
+            this.lblMessage = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -407,30 +408,6 @@
             this.btnOther.Visible = false;
             this.btnOther.Click += new System.EventHandler(this.withdrawCash_Click);
             // 
-            // lblWithdraw
-            // 
-            this.lblWithdraw.AutoSize = true;
-            this.lblWithdraw.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblWithdraw.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.lblWithdraw.Location = new System.Drawing.Point(58, 69);
-            this.lblWithdraw.Name = "lblWithdraw";
-            this.lblWithdraw.Size = new System.Drawing.Size(303, 29);
-            this.lblWithdraw.TabIndex = 28;
-            this.lblWithdraw.Text = "Select Amount to Withdraw";
-            this.lblWithdraw.Visible = false;
-            //
-            // btnDeposit
-            //
-            this.btnDepositCash.Font = new System.Drawing.Font("Tahoma", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnDepositCash.Location = new System.Drawing.Point(63, 159);
-            this.btnDepositCash.Name = "btnDepositCash";
-            this.btnDepositCash.Size = new System.Drawing.Size(309, 61);
-            this.btnDepositCash.TabIndex = 19;
-            this.btnDepositCash.Text = "Deposit Cash";
-            this.btnDepositCash.UseVisualStyleBackColor = true;
-            this.btnDepositCash.Visible = false;
-            this.btnDepositCash.Click += new System.EventHandler(this.BtnDeposit_Click);
-            // 
             // btnd10
             // 
             this.btnd10.Font = new System.Drawing.Font("Tahoma", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -502,16 +479,27 @@
             this.btndOther.UseVisualStyleBackColor = true;
             this.btndOther.Visible = false;
             this.btndOther.Click += new System.EventHandler(this.DepositCash_Click);
-
-            //
+            // 
+            // lblWithdraw
+            // 
+            this.lblWithdraw.AutoSize = true;
+            this.lblWithdraw.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblWithdraw.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.lblWithdraw.Location = new System.Drawing.Point(58, 69);
+            this.lblWithdraw.Name = "lblWithdraw";
+            this.lblWithdraw.Size = new System.Drawing.Size(303, 29);
+            this.lblWithdraw.TabIndex = 28;
+            this.lblWithdraw.Text = "Select Amount to Withdraw";
+            this.lblWithdraw.Visible = false;
+            // 
             // lblDeposit
-            //
+            // 
             this.lblDeposit.AutoSize = true;
             this.lblDeposit.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblDeposit.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.lblDeposit.Location = new System.Drawing.Point(58, 69);
             this.lblDeposit.Name = "lblDeposit";
-            this.lblDeposit.Size = new System.Drawing.Size(303, 29);
+            this.lblDeposit.Size = new System.Drawing.Size(281, 29);
             this.lblDeposit.TabIndex = 28;
             this.lblDeposit.Text = "Select Amount to Deposit";
             this.lblDeposit.Visible = false;
@@ -552,37 +540,47 @@
             this.btnDepositCash.Visible = false;
             this.btnDepositCash.Click += new System.EventHandler(this.BtnDeposit_Click);
             // 
+            // lblMessage
+            // 
+            this.lblMessage.BackColor = System.Drawing.Color.Silver;
+            this.lblMessage.Font = new System.Drawing.Font("Nirmala UI", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblMessage.Location = new System.Drawing.Point(40, 127);
+            this.lblMessage.Name = "lblMessage";
+            this.lblMessage.Size = new System.Drawing.Size(410, 330);
+            this.lblMessage.TabIndex = 30;
+            this.lblMessage.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblMessage.Visible = false;
+            // 
             // ATM
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Silver;
             this.ClientSize = new System.Drawing.Size(940, 574);
-            this.Controls.Add(this.lblWithdraw);
             this.Controls.Add(this.btnOther);
+            this.Controls.Add(this.lblWithdraw);
             this.Controls.Add(this.lblWelcome);
             this.Controls.Add(this.lblDeposit);
             this.Controls.Add(this.lblText);
             this.Controls.Add(this.btnReturnCard);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.btn10);
-            this.Controls.Add(this.btn20);
-            this.Controls.Add(this.btn40);
             this.Controls.Add(this.btn100);
             this.Controls.Add(this.btn500);
             this.Controls.Add(this.btnd10);
-            this.Controls.Add(this.btnd20);
             this.Controls.Add(this.btnd40);
             this.Controls.Add(this.btnd100);
             this.Controls.Add(this.btnd500);
-
-            this.Controls.Add(this.btnDepositCash);
             this.Controls.Add(this.btnCheckBalance);
             this.Controls.Add(this.txtBoxPin);
             this.Controls.Add(this.btnWithdraw);
             this.Controls.Add(this.btnDepositCash);
             this.Controls.Add(this.txtBoxAccountNo);
-
+            this.Controls.Add(this.lblMessage);
+            this.Controls.Add(this.btn40);
+            this.Controls.Add(this.btn20);
+            this.Controls.Add(this.btnd20);
+            this.Controls.Add(this.btndOther);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ATM";
@@ -635,5 +633,6 @@
         private System.Windows.Forms.Button btnCheckBalance;
         private System.Windows.Forms.Button btnReturnCard;
         private System.Windows.Forms.Button btnDepositCash;
+        private System.Windows.Forms.Label lblMessage;
     }
 }
